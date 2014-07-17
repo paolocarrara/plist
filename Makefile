@@ -1,18 +1,19 @@
 CC = gcc
 DBG = -g -ggdb
 WFLG = -Wall -pedantic -Wunused -Wformat -Wextra -Wunreachable-code -Wformat-security -Winline -Wreturn-type -Wuninitialized -Wimplicit-function-declaration
+INCL_H = include/
+INCL_O = objects/
+INCL_S = sources/
 
-plist : main.c
-	$(CC) $(DBG) $(WFLG) main.c -o plist
+plist: $(INCL_O)main.o $(INCL_O)plist_t.o
+	$(CC) $(INCL_O)main.o $(INCL_O)plist_t.o -o $@
 
-tests: t1 t2
+$(INCL_O)main.o: $(INCL_S)main.c $(INCL_H)plist_tests.h
+	$(CC) -c $(DBG) $(WFLG) $(INCL_S) $< -o $@
 
-t1:
-	echo "Executando teste 1"
-
-t2:
-	echo "Executando teste 2"
+$(INCL_O)plist_t.o: $(INCL_S)plist_tests.c $(INCL_H)plist_tests.h
+	$(CC) -c $(DBG) $(WFLG) $(INCL_S) $< -o $@
 	
 
 clean:
-	rm *.o plist
+	rm objects/* plist
