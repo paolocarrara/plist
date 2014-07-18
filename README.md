@@ -12,8 +12,12 @@ Primeira Fase
 
 >2º) Criação de uma função que, guando chamada, irá devolver uma estrutura de configuração com valores pré definidos nela.
 
+>3º) Criação de funções que irão manipular os atributos da estrutura de configuração.
+
 First Phase
 
->1º) Development of the structure that will hold the configuration of a password list. This configuration will be the base to the list generation.
+>1º) Development of the structure that will hold the configuration of a password list. This configuration will be the base to the list generatio.
 
 >2º) Creation of a function that, when called, will return a configuration structure with default values to its members.
+
+>3º) Creation of the functions that will manipulate the fieds of the configuration structure.
