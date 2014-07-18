@@ -20,4 +20,8 @@ struct p_config {
 
 struct p_config *new_p_config (void);
 
+void p_config_set_min_s (uint8_t, struct p_config *);
+void p_config_set_max_s (uint8_t, struct p_config *);
+void p_config_set_size (uint8_t, struct p_config *);
+
 #endif
