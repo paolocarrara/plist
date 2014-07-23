@@ -1,6 +1,6 @@
 CC = gcc
 DBG = -g -ggdb
-WFLG = -Wall -pedantic -Wunused -Wformat -Wextra -Wunreachable-code -Wformat-security -Winline -Wreturn-type -Wuninitialized -Wimplicit-function-declaration
+WFLG = -Wall -pedantic -Wunused -Wformat -Wextra -Wunreachable-code -Wformat-security -Winline -Wreturn-type -Wuninitialized -Wimplicit-function-declaration -Wnonnull
 INCL_H = include/
 INCL_O = objects/
 INCL_S = sources/

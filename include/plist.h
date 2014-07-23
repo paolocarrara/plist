@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <string.h>
 
 struct sets {
 	uint8_t *base_set;
@@ -25,12 +26,16 @@ struct p_config {
 	struct sets charsets;
 };
 
-struct p_config *new_p_config (void);
+__attribute__((malloc, warn_unused_result))struct p_config *new_p_config (void);
 
 void p_config_set_min_s (uint8_t, struct p_config *);
 void p_config_set_max_s (uint8_t, struct p_config *);
-void p_config_set_size (uint8_t, struct p_config *);
+__attribute__((flatten)) void p_config_set_size (uint8_t, struct p_config *);
 
-void free_p_config (struct p_config *);
+void p_config_base_set (int8_t *, struct p_config *);
+
+__attribute__((flatten)) void free_p_config (struct p_config *);
+
+__attribute__((flatten)) void print_p_config (struct p_config *);
 
 #endif
