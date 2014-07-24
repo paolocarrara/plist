@@ -48,3 +48,14 @@ uint8_t test__p_config_set_max_s (uint8_t expected_min_s, uint8_t expected_max_s
 	}
 }
 
+uint8_t test__p_config_set_total (uint64_t expected_total, struct p_config *config)
+{
+	if (config->total == expected_total) {
+		printf ("TEST <p_config_set_total> -- OK\n");
+		return 1;
+	}
+	else {
+		printf ("TEST <p_config_set_total> -- NOTOK (%lu)\n", config->total);
+		return 0;
+	}
+}

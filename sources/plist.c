@@ -178,6 +178,16 @@ __attribute__((nonnull, flatten)) static inline void p_config_set_total (struct 
 	}
 }
 
+#if __LP64__
+uint64_t
+#else
+uint32_t
+#endif
+	p_config_get_total (const struct p_config *config)
+{
+	return config->total;
+}
+
 __attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config *, uint8_t);
 
 /*OK*/
@@ -195,12 +205,51 @@ __attribute__((nonnull, malloc, flatten)) static inline uint8_t *malloc_lengths 
 	return lengths;
 }
 
-__attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config *config, uint8_t pos)
+__attribute__((always_inline)) static inline uint8_t noec (const int8_t *, const int8_t *); /*noec = number of equal chars*/
+
+__attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config *config, uint8_t ndx)
 {
-	uint8_t len = strlen ((char *)config->charsets.base_set);
+	uint8_t len = 0;
+
+	if (config->charsets.sub_set[ndx]) {
+		len = strlen ((char *) config->charsets.sub_set[ndx]);
+		if (config->charsets.add_set[ndx]) {
+			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.sub_set[ndx]) );
+		}
+		if (config->charsets.rm_set[ndx]) {
+			len -= ( noec (config->charsets.sub_set[ndx], config->charsets.rm_set[ndx]) );
+		}
+	}
+	else {
+		len = strlen ((char *) config->charsets.base_set);
+		if (config->charsets.add_set[ndx]) {
+			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.base_set) );
+		}
+		if (config->charsets.rm_set[ndx]) {
+			len -= ( noec (config->charsets.base_set, config->charsets.rm_set[ndx]) );
+		}
+	}
+
 	return len;
 }
 
+__attribute__((always_inline)) static inline uint8_t noec (const int8_t *str_1, const int8_t *str_2)
+{
+	uint8_t n_equals = 0;
+	uint8_t i, j;
+	uint8_t len_1 = strlen ((char *) str_1);
+	uint8_t len_2 = strlen ((char *) str_2);
+
+	for (i = 0; i < len_1; i++) {
+		for (j = 0; j < len_2; j++) {
+			if (str_2[j] == str_1[i]) {
+				n_equals++;
+				j = len_2;
+			}
+		}
+	}
+	return n_equals;
+}
 /*OK*/
 __attribute__((nonnull, always_inline)) static inline void sub_total_from_zero_to_min_s (struct p_config *config, const uint8_t *lengths)
 {

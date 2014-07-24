@@ -31,6 +31,13 @@ __attribute__((flatten)) void p_config_set_min_s	(uint8_t, struct p_config *);
 __attribute__((flatten)) void p_config_set_max_s	(uint8_t, struct p_config *);
 __attribute__((flatten)) void p_config_set_size		(uint8_t, struct p_config *);
 
+#if __LP64__
+uint64_t
+#else
+uint32_t
+#endif
+	p_config_get_total (const struct p_config *);
+
 __attribute__((flatten)) void p_config_base_set 	(const char *, struct p_config *);
 __attribute__((flatten)) void p_config_add_chars_in	(const char *, uint8_t, struct p_config *);
 __attribute__((flatten)) void p_config_rm_chars_from	(const char *, uint8_t, struct p_config *);
