@@ -205,8 +205,8 @@ __attribute__((nonnull, malloc, flatten)) static inline uint8_t *malloc_lengths 
 	return lengths;
 }
 
-__attribute__((always_inline)) static inline uint8_t noec	(const int8_t *, const int8_t *); /*noec = number of equal chars*/
-__attribute__((always_inline)) static inline int8_t *cnt	(const int8_t *, const int8_t *); /*concatenates*/
+__attribute__((always_inline, nonnull)) static inline uint8_t noec	(const int8_t *, const int8_t *); /*noec = number of equal chars*/
+__attribute__((always_inline, nonnull)) static inline int8_t *cnt	(const int8_t *, const int8_t *); /*concatenates*/
 
 __attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config *config, uint8_t ndx)
 {
@@ -251,9 +251,9 @@ __attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const 
 __attribute__((always_inline)) static inline uint8_t noec (const int8_t *str_1, const int8_t *str_2)
 {
 	uint8_t n_equals = 0;
-	uint8_t i, j;
 	uint8_t len_1 = strlen ((char *) str_1);
 	uint8_t len_2 = strlen ((char *) str_2);
+	uint8_t i, j;
 
 	for (i = 0; i < len_1; i++) {
 		for (j = 0; j < len_2; j++) {
@@ -272,7 +272,7 @@ __attribute__((always_inline)) static inline int8_t *cnt (const int8_t *str_1, c
 	int8_t *cntn = malloc (len_cntn*sizeof(int8_t));
 
 	memcpy (cntn, str_1, strlen ((char*) str_1)+1);
-	strcat ((char *)cntn, (char *)str_2);
+	strcat ((char *) cntn, (char *) str_2);
 
 	return cntn;
 }
