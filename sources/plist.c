@@ -205,7 +205,8 @@ __attribute__((nonnull, malloc, flatten)) static inline uint8_t *malloc_lengths 
 	return lengths;
 }
 
-__attribute__((always_inline)) static inline uint8_t noec (const int8_t *, const int8_t *); /*noec = number of equal chars*/
+__attribute__((always_inline)) static inline uint8_t noec	(const int8_t *, const int8_t *); /*noec = number of equal chars*/
+__attribute__((always_inline)) static inline int8_t *cnt	(const int8_t *, const int8_t *); /*concatenates*/
 
 __attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config *config, uint8_t ndx)
 {
@@ -213,20 +214,34 @@ __attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const 
 
 	if (config->charsets.sub_set[ndx]) {
 		len = strlen ((char *) config->charsets.sub_set[ndx]);
-		if (config->charsets.add_set[ndx]) {
-			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.sub_set[ndx]) );
+
+		if (config->charsets.add_set[ndx] && config->charsets.rm_set[ndx]) {
+			int8_t *cntn = cnt (config->charsets.sub_set[ndx], config->charsets.add_set[ndx]);
+			len -= noec (cntn, config->charsets.rm_set[ndx]);
+			len += strlen ((char *) config->charsets.add_set[ndx]);
+			free (cntn);
 		}
-		if (config->charsets.rm_set[ndx]) {
-			len -= ( noec (config->charsets.sub_set[ndx], config->charsets.rm_set[ndx]) );
+		else if (config->charsets.rm_set[ndx]) {
+			len -= noec (config->charsets.sub_set[ndx], config->charsets.rm_set[ndx]);
+		}
+		else if (config->charsets.add_set[ndx]) {
+			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.sub_set[ndx]) );
 		}
 	}
 	else {
 		len = strlen ((char *) config->charsets.base_set);
-		if (config->charsets.add_set[ndx]) {
-			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.base_set) );
+
+		if (config->charsets.add_set[ndx] && config->charsets.rm_set[ndx]) {
+			int8_t *cntn = cnt (config->charsets.base_set, config->charsets.add_set[ndx]);
+			len -= noec (cntn, config->charsets.rm_set[ndx]);
+			len += strlen ((char *) config->charsets.add_set[ndx]);
+			free (cntn);
 		}
-		if (config->charsets.rm_set[ndx]) {
-			len -= ( noec (config->charsets.base_set, config->charsets.rm_set[ndx]) );
+		else if (config->charsets.rm_set[ndx]) {
+			len -= noec (config->charsets.base_set, config->charsets.rm_set[ndx]);
+		}
+		else if (config->charsets.add_set[ndx]) {
+			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.base_set) );
 		}
 	}
 
@@ -250,6 +265,18 @@ __attribute__((always_inline)) static inline uint8_t noec (const int8_t *str_1, 
 	}
 	return n_equals;
 }
+
+__attribute__((always_inline)) static inline int8_t *cnt (const int8_t *str_1, const int8_t *str_2)
+{
+	uint8_t len_cntn = strlen ((char*) str_1) + strlen ((char*) str_2) + 1;
+	int8_t *cntn = malloc (len_cntn*sizeof(int8_t));
+
+	memcpy (cntn, str_1, strlen ((char*) str_1)+1);
+	strcat ((char *)cntn, (char *)str_2);
+
+	return cntn;
+}
+
 /*OK*/
 __attribute__((nonnull, always_inline)) static inline void sub_total_from_zero_to_min_s (struct p_config *config, const uint8_t *lengths)
 {
