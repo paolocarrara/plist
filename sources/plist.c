@@ -307,6 +307,75 @@ __attribute__((nonnull, always_inline)) static inline void sub_total_from_min_s_
 		pre_state *= lengths[i];
 	}
 }
+
+void print_shit (uint8_t **compiled_password, uint8_t size)
+{
+	uint8_t i;
+	for (i = 0; i < size; i++)
+		printf ("password[%d]: %s\n", i, compiled_password[i]);
+
+}
+
+__attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile (struct p_config *config)
+{
+	uint8_t **compiled_password;
+	uint8_t *len;
+	uint8_t i;
+
+	compiled_password = malloc (config->max_s*sizeof(uint8_t *));
+	len = malloc (config->max_s*sizeof(uint8_t));
+	
+	for (i = 0; i < config->max_s; i++) {
+		len[i] = strlen((char *)config->charsets.base_set);
+		compiled_password[i] = malloc (len[i]*sizeof(uint8_t));
+		memcpy (compiled_password[i], config->charsets.base_set, len[i]);
+	}
+
+	print_shit (compiled_password, config->max_s);
+
+	return compiled_password;
+}
+
+__attribute__((nonnull)) static void check_bounds (uint8_t **compiled_password, uint8_t **bounds, uint8_t *len, uint8_t ndx)
+{
+	if (compiled_password[ndx] == bounds[ndx]) {
+		compiled_password[ndx] -= len[ndx];
+		check_bounds (compiled_password, bounds, len, ndx+1);
+		compiled_password[ndx+1]++;
+	}
+}
+
+void generate (struct p_config *config)
+{
+	uint8_t **password;
+	uint8_t **bounds;
+	uint8_t *len;
+
+	#if __LP64__
+	uint64_t
+	#else
+	uint32_t
+	#endif
+		total, i;
+
+	bounds = malloc (config->max_s*sizeof(uint8_t *));
+	len = malloc (config->max_s*sizeof(uint8_t)); 
+
+	password = p_config_compile (config);
+
+	for (i = 0; i < config->max_s; i++) {
+		len[i] = strlen ((char *) password[i]);
+		bounds[i] = password[i] + len[i] - 1;
+	}
+
+	total = config->total;
+
+	for (i = 0; i < total; i++) {
+		check_bounds (password, bounds, len, 0);
+		password[0]++;
+	}
+}
+
 __attribute__((nonnull, always_inline)) static inline void free_p_config_add_set	(struct p_config *);
 __attribute__((nonnull, always_inline)) static inline void free_p_config_rm_set		(struct p_config *);
 __attribute__((nonnull, always_inline)) static inline void free_p_config_sub_set	(struct p_config *);

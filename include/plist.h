@@ -43,6 +43,8 @@ __attribute__((flatten)) void p_config_add_chars_in	(const char *, uint8_t, stru
 __attribute__((flatten)) void p_config_rm_chars_from	(const char *, uint8_t, struct p_config *);
 __attribute__((flatten)) void p_config_sub_chars_from	(const char *, uint8_t, struct p_config *);
 
+void generate (struct p_config *);
+
 __attribute__((flatten)) void free_p_config (struct p_config *);
 
 __attribute__((flatten)) void print_p_config (const struct p_config *);
