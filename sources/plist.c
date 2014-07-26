@@ -1,5 +1,5 @@
 #include "../include/plist.h"
-
+#include <time.h>
 #ifndef __GNUC__
 #define __inline__ inline
 #endif
@@ -308,14 +308,6 @@ __attribute__((nonnull, always_inline)) static inline void sub_total_from_min_s_
 	}
 }
 
-void print_shit (uint8_t **compiled_password, uint8_t size)
-{
-	uint8_t i;
-	for (i = 0; i < size; i++)
-		printf ("password[%d]: %s\n", i, compiled_password[i]);
-
-}
-
 __attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile (struct p_config *config)
 {
 	uint8_t **compiled_password;
@@ -331,25 +323,25 @@ __attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile
 		memcpy (compiled_password[i], config->charsets.base_set, len[i]);
 	}
 
-	print_shit (compiled_password, config->max_s);
-
 	return compiled_password;
 }
 
-__attribute__((nonnull)) static void check_bounds (uint8_t **compiled_password, uint8_t **bounds, uint8_t *len, uint8_t ndx)
+static uint8_t limit;
+
+__attribute__((nonnull, hot)) static void check_bounds (uint8_t **compiled_password, uint8_t **bounds, uint8_t *len, uint8_t ndx)
 {
 	if (compiled_password[ndx] == bounds[ndx]) {
 		compiled_password[ndx] -= len[ndx];
-		check_bounds (compiled_password, bounds, len, ndx+1);
-		compiled_password[ndx+1]++;
+		check_bounds (compiled_password, bounds, len, ++ndx);
+		compiled_password[ndx]++;
 	}
 }
 
-void generate (struct p_config *config)
+__attribute__((hot)) void generate (struct p_config *config)
 {
 	uint8_t **password;
 	uint8_t **bounds;
-	uint8_t *len;
+	uint8_t *len; /*Try to eliminate this variable*/
 
 	#if __LP64__
 	uint64_t
@@ -358,22 +350,43 @@ void generate (struct p_config *config)
 	#endif
 		total, i;
 
+	uint8_t min, max;
+	clock_t t;
+
 	bounds = malloc (config->max_s*sizeof(uint8_t *));
 	len = malloc (config->max_s*sizeof(uint8_t)); 
-
 	password = p_config_compile (config);
 
 	for (i = 0; i < config->max_s; i++) {
 		len[i] = strlen ((char *) password[i]);
 		bounds[i] = password[i] + len[i] - 1;
 	}
-
-	total = config->total;
-
-	for (i = 0; i < total; i++) {
-		check_bounds (password, bounds, len, 0);
-		password[0]++;
+	
+	if (config->min_s > 1) {
+		for (i = 0, total = 1; i < config->min_s-1; i++) {
+			total *=len[0];
+		}
 	}
+	else {
+		total = 1;
+	}
+
+
+	t = clock ();
+	for (limit = min = config->min_s, max = config->max_s; min <= max; min++, limit++) {
+
+		total *= len[min-1];
+		i = total;
+
+		while (i-->0) {
+			check_bounds (password, bounds, len, 0);
+			password[0]++;
+		}
+		password[min]--;
+	}
+	t = clock() - t;
+
+	printf ("TIME ELAPSED: %f\n", (float)t/CLOCKS_PER_SEC);
 }
 
 __attribute__((nonnull, always_inline)) static inline void free_p_config_add_set	(struct p_config *);
