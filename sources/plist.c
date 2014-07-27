@@ -330,12 +330,11 @@ __attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile
 }
 
 static uint8_t limit;
-
 /*buffer shits, you know, so you don't have to call write for every goddamn byte*/
 static uint8_t *buff;
 static uint8_t buffs;
 static uint8_t buffl;
-
+__attribute__ ((always_inline)) static inline void valid_config 		(struct p_config *);
 __attribute__ ((nonnull, hot)) static void check_bounds				(uint8_t **, uint8_t **, uint8_t *, uint8_t);
 __attribute__ ((always_inline, nonnull, malloc)) static inline uint8_t *lengths	(struct p_config *, uint8_t **);
 __attribute__ ((always_inline, nonnull, malloc)) static inline uint8_t **boundS	(struct p_config *, uint8_t **, uint8_t *);
@@ -361,6 +360,8 @@ __attribute__((hot)) void generate (struct p_config *config, int8_t fd, uint8_t 
 		total, i;
 	uint8_t min, max;
 	clock_t t;
+
+	valid_config (config);
 
 	/*Set up the buffer*/
 	buff = buffer (buff_s);
@@ -429,7 +430,7 @@ __attribute ((always_inline, malloc)) static inline uint8_t *buffer (uint8_t buf
 {
 	buffl = 0;	
 	buffs = buff_s;
-	return malloc (buffs*sizeof(uint8_t));
+	return malloc (buffs*sizeof (uint8_t));
 }
 
 __attribute__((nonnull, hot)) static void check_bounds (uint8_t **compiled_password, uint8_t **bounds, uint8_t *len, uint8_t ndx)
@@ -483,6 +484,14 @@ __attribute__((always_inline, nonnull, malloc)) static inline uint8_t **boundS (
 	}
 	bounds[i] = (void *) ((uint8_t *) NULL + 1);
 	return bounds;
+}
+
+__attribute__ ((always_inline)) static inline void valid_config (struct p_config *config) /*NOT FINISHED*/
+{
+	if (config)
+		return; 
+	else
+		exit (1);
 }
 __attribute__((nonnull, always_inline)) static inline void free_p_config_add_set	(struct p_config *);
 __attribute__((nonnull, always_inline)) static inline void free_p_config_rm_set		(struct p_config *);
