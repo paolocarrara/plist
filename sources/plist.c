@@ -314,7 +314,7 @@ __attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile
 	uint8_t *len;
 	uint8_t i;
 
-	compiled_password = malloc (config->max_s*sizeof(uint8_t *));
+	compiled_password = malloc ((config->max_s+1)*sizeof(uint8_t *));
 	len = malloc (config->max_s*sizeof(uint8_t));
 	
 	for (i = 0; i < config->max_s; i++) {
@@ -322,6 +322,7 @@ __attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile
 		compiled_password[i] = malloc ((len[i]+1)*sizeof(uint8_t));
 		memcpy (compiled_password[i], config->charsets.base_set, len[i]+1);
 	}
+	compiled_password[i] = NULL;
 
 	free (len);
 
@@ -334,7 +335,6 @@ __attribute__((nonnull, hot)) static void check_bounds (uint8_t **, uint8_t **, 
 __attribute__((always_inline, nonnull, malloc)) static inline uint8_t *lengths (struct p_config *, uint8_t **);
 __attribute__((always_inline, nonnull, malloc)) static inline uint8_t **boundS (struct p_config *, uint8_t **, uint8_t *);
 __attribute__((always_inline, nonnull)) static inline 
-__attribute__((always_inline, nonnull))
 #ifdef __LP64__
 uint64_t
 #else
@@ -345,18 +345,14 @@ uint32_t
 __attribute__((always_inline, nonnull, hot)) static inline void output_password (uint8_t **password, uint8_t fd)
 {
 	uint8_t i;
-	for (i = 0; i < limit; i++) {
+	for (i = 0; i < limit; i++) 
 		write (fd, password[i], 1);
-	}
-	printf ("\n");
+	write (fd, "\n", 1);
 }
 
 __attribute__((hot)) void generate (struct p_config *config, int8_t fd)
 {
-	uint8_t **password;
-	uint8_t **bounds;
-	uint8_t *len;
-
+	uint8_t **password, **bounds, *len;
 	#if __LP64__
 	uint64_t
 	#else
@@ -440,10 +436,11 @@ uint32_t
 
 __attribute__((always_inline, nonnull, malloc)) static inline uint8_t **boundS (struct p_config *config, uint8_t **password, uint8_t *len)
 {
-	uint8_t i, **bounds = malloc ( (50+config->max_s)*sizeof (uint8_t *));
+	uint8_t i, **bounds = malloc ( (config->max_s+1)*sizeof (uint8_t *));
 	for (i = 0; i < config->max_s; i++) {
 		bounds[i] = password[i] + len[i] - 1;
 	}
+	bounds[i] = (void *) ((uint8_t *) NULL + 1);
 	return bounds;
 }
 __attribute__((nonnull, always_inline)) static inline void free_p_config_add_set	(struct p_config *);

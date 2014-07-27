@@ -1,3 +1,4 @@
 *.swp
 main.c
 plist
+out.txt
