@@ -331,26 +331,26 @@ __attribute__((always_inline, nonnull)) static inline uint8_t **p_config_compile
 
 static uint8_t limit;
 
-__attribute__((nonnull, hot)) static void check_bounds (uint8_t **, uint8_t **, uint8_t *, uint8_t);
-__attribute__((always_inline, nonnull, malloc)) static inline uint8_t *lengths (struct p_config *, uint8_t **);
-__attribute__((always_inline, nonnull, malloc)) static inline uint8_t **boundS (struct p_config *, uint8_t **, uint8_t *);
-__attribute__((always_inline, nonnull)) static inline 
+/*buffer shits, you know, so you don't have to call write for every goddamn byte*/
+static uint8_t *buff;
+static uint8_t buffs;
+static uint8_t buffl;
+
+__attribute__ ((nonnull, hot)) static void check_bounds				(uint8_t **, uint8_t **, uint8_t *, uint8_t);
+__attribute__ ((always_inline, nonnull, malloc)) static inline uint8_t *lengths	(struct p_config *, uint8_t **);
+__attribute__ ((always_inline, nonnull, malloc)) static inline uint8_t **boundS	(struct p_config *, uint8_t **, uint8_t *);
+__attribute__ ((always_inline, nonnull)) static inline 
 #ifdef __LP64__
 uint64_t
 #else
 uint32_t
 #endif
 	initial_total (struct p_config *, uint8_t *);
+__attribute__ ((always_inline, flatten, nonnull, hot)) static inline void buff_password (uint8_t **, int8_t);
+__attribute__ ((always_inline, malloc)) static inline uint8_t *buffer 			(uint8_t);
+__attribute__((always_inline, hot)) static inline void buffout				(int8_t);
 
-__attribute__((always_inline, nonnull, hot)) static inline void output_password (uint8_t **password, uint8_t fd)
-{
-	uint8_t i;
-	for (i = 0; i < limit; i++) 
-		write (fd, password[i], 1);
-	write (fd, "\n", 1);
-}
-
-__attribute__((hot)) void generate (struct p_config *config, int8_t fd)
+__attribute__((hot)) void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
 {
 	uint8_t **password, **bounds, *len;
 	#if __LP64__
@@ -359,36 +359,77 @@ __attribute__((hot)) void generate (struct p_config *config, int8_t fd)
 	uint32_t
 	#endif
 		total, i;
-
 	uint8_t min, max;
 	clock_t t;
 
+	/*Set up the buffer*/
+	buff = buffer (buff_s);
+
+	/*Set up the password*/
 	password = p_config_compile (config);
+
+	/*Get the length of every position set in the password*/
 	len = lengths (config, password);
+
+	/*Get the bounds of every position set in the password*/
 	bounds = boundS (config, password, len);
+
+	/*Get the initial total of passwords to generate*/
 	total = initial_total (config, len);
 
-	t = clock ();
+	t = clock (); /*<-- Not needed*/
 	for (limit = min = config->min_s, max = config->max_s; min <= max; min++, limit++) {
 
 		total *= len[min-1];
 		i = total;
 
 		while (i-->0) {
-			output_password (password, fd);
+			buff_password (password, fd);
 			check_bounds (password, bounds, len, 0);
 			password[0]++;
 		}
 		if (min < max)
 			password[min]--;
 	}
-	t = clock() - t;
+	buffout (fd); /*Cleans the buffer*/
+	t = clock() - t; /*<-- Not needed*/
 
-	printf ("TIME ELAPSED: %f\n", (float)t/CLOCKS_PER_SEC);
+	printf ("TIME ELAPSED: %f\n", (float)t/CLOCKS_PER_SEC); /*<-- Not needed*/
 
+	/*Frees*/
 	free (len);
+	free (buff);
 	free (bounds);
 	free (password);
+}
+
+__attribute__((always_inline, flatten, nonnull, hot)) static inline void buff_password (uint8_t **password, int8_t fd)
+{
+	uint8_t i;
+	for (i = 0; i < limit; i++, buffl++, buff++)
+		memcpy (buff, password[i], 1); 
+
+	/*Ugly. maybe don't do it, or make it optional..*/
+	memcpy (buff, "\n", 1);
+	buffl++;
+	buff++;
+
+	if (buffl >= buffs-limit)
+		buffout (fd);
+}
+
+__attribute__((always_inline, hot)) static inline void buffout (int8_t fd)
+{
+	buff -= buffl;
+	write (fd, buff, buffl); /*maybe: buffl -= write (fd, buff, buffl)*/
+	buffl = 0;
+}
+
+__attribute ((always_inline, malloc)) static inline uint8_t *buffer (uint8_t buff_s)
+{
+	buffl = 0;	
+	buffs = buff_s;
+	return malloc (buffs*sizeof(uint8_t));
 }
 
 __attribute__((nonnull, hot)) static void check_bounds (uint8_t **compiled_password, uint8_t **bounds, uint8_t *len, uint8_t ndx)
