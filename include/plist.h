@@ -40,10 +40,10 @@ uint32_t
 #endif
 	p_config_get_total (const struct p_config *);
 
-__attribute__((flatten)) void p_config_base_set 	(const char *, struct p_config *);
-__attribute__((flatten)) void p_config_add_chars_in	(const char *, uint8_t, struct p_config *);
-__attribute__((flatten)) void p_config_rm_chars_from	(const char *, uint8_t, struct p_config *);
-__attribute__((flatten)) void p_config_sub_chars_from	(const char *, uint8_t, struct p_config *);
+__attribute__((flatten)) void p_config_base_set 	(char *, struct p_config *);
+__attribute__((flatten)) void p_config_add_chars_in	(char *, uint8_t, struct p_config *);
+__attribute__((flatten)) void p_config_rm_chars_from	(char *, uint8_t, struct p_config *);
+__attribute__((flatten)) void p_config_sub_chars_from	(char *, uint8_t, struct p_config *);
 
 __attribute__((hot)) void generate (struct p_config *, int8_t, uint8_t);
 
