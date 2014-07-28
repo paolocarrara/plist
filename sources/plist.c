@@ -5,7 +5,8 @@
 #define __inline__ inline
 #endif
 
-__attribute__((always_inline, nonnull)) static inline void p_config_set_default (struct p_config * const new) 
+__attribute__((always_inline, nonnull)) 
+static inline void p_config_set_default (struct p_config * const new) 
 {
 	if (new) {
 		new->min_s = 0;
@@ -21,7 +22,8 @@ __attribute__((always_inline, nonnull)) static inline void p_config_set_default 
 	}
 }
 
-__attribute__((malloc, warn_unused_result)) struct p_config *new_p_config (void)
+__attribute__((malloc, warn_unused_result)) 
+struct p_config *new_p_config (void)
 {
 	struct p_config *new = malloc (sizeof(struct p_config));
 
@@ -35,9 +37,11 @@ __attribute__((malloc, warn_unused_result)) struct p_config *new_p_config (void)
 	return new;
 }
 
-__attribute__((flatten)) static inline void p_config_set_total (struct p_config * const);
+__attribute__((flatten)) 
+static inline void p_config_set_total (struct p_config * const);
 
-__attribute__((flatten)) void p_config_set_size (const uint8_t size, struct p_config * const config) 
+__attribute__((flatten)) 
+void p_config_set_size (const uint8_t size, struct p_config * const config) 
 {
 	if (config) {
 		p_config_set_min_s (size, config);
@@ -48,7 +52,8 @@ __attribute__((flatten)) void p_config_set_size (const uint8_t size, struct p_co
 	}
 }
 
-__attribute__((flatten)) void p_config_set_min_s (const uint8_t min, struct p_config * const config)
+__attribute__((flatten)) 
+void p_config_set_min_s (const uint8_t min, struct p_config * const config)
 {
 	if (config) {
 		if (min > config->max_s) {
@@ -62,10 +67,13 @@ __attribute__((flatten)) void p_config_set_min_s (const uint8_t min, struct p_co
 	}
 }
 
-__attribute__((nonnull, always_inline)) static inline void p_config_realloc_sets	(struct p_config * const, const uint8_t);
-__attribute__((nonnull, always_inline)) static inline void p_config_null_sets		(struct p_config * const, const uint8_t);
+__attribute__((nonnull, always_inline)) 
+static inline void p_config_realloc_sets	(struct p_config * const, const uint8_t);
+__attribute__((nonnull, always_inline)) 
+static inline void p_config_null_sets		(struct p_config * const, const uint8_t);
 
-__attribute__((flatten)) void p_config_set_max_s (const uint8_t max, struct p_config *config)
+__attribute__((flatten)) 
+void p_config_set_max_s (const uint8_t max, struct p_config *config)
 {
 	if (config) {
 		if (config->max_s != max) {
@@ -89,14 +97,16 @@ __attribute__((flatten)) void p_config_set_max_s (const uint8_t max, struct p_co
 	}
 }
 
-__attribute__((nonnull, always_inline)) static inline void p_config_realloc_sets (struct p_config * const config, const uint8_t max)
+__attribute__((nonnull, always_inline)) 
+static inline void p_config_realloc_sets (struct p_config * const config, const uint8_t max)
 {
 	config->charsets.add_set = realloc ( config->charsets.add_set, max*sizeof (int8_t *) );
 	config->charsets.rm_set = realloc ( config->charsets.rm_set, max*sizeof (int8_t *) );
 	config->charsets.sub_set = realloc ( config->charsets.sub_set, max*sizeof (int8_t *) );
 }
 
-__attribute__((nonnull, always_inline)) static inline void p_config_null_sets (struct p_config * const config, const uint8_t max)
+__attribute__((nonnull, always_inline)) 
+static inline void p_config_null_sets (struct p_config * const config, const uint8_t max)
 {
 	for (;config->max_s < max; config->max_s++) {
 		config->charsets.add_set[config->max_s] = NULL;
@@ -105,7 +115,8 @@ __attribute__((nonnull, always_inline)) static inline void p_config_null_sets (s
 	}
 }
 
-__attribute__((flatten)) void p_config_base_set (char * const base_set, struct p_config * const config)
+__attribute__((flatten)) 
+void p_config_base_set (char * const base_set, struct p_config * const config)
 {
 	if (config) {/*maybe free, checkt that*/
 		uint8_t len = strlen (base_set)+1;
@@ -118,7 +129,8 @@ __attribute__((flatten)) void p_config_base_set (char * const base_set, struct p
 	}
 }
 
-__attribute__((flatten)) void p_config_add_chars_in (char * const chars_to_add, const uint8_t ndx, struct p_config * const config)
+__attribute__((flatten)) 
+void p_config_add_chars_in (char * const chars_to_add, const uint8_t ndx, struct p_config * const config)
 {
 	if (config && ndx < config->max_s) {
 		uint8_t len = strlen (chars_to_add)+1;
@@ -131,7 +143,8 @@ __attribute__((flatten)) void p_config_add_chars_in (char * const chars_to_add, 
 	}
 }
 
-__attribute__((flatten)) void p_config_rm_chars_from (char * const chars_to_rm, const uint8_t ndx, struct p_config * const config)
+__attribute__((flatten)) 
+void p_config_rm_chars_from (char * const chars_to_rm, const uint8_t ndx, struct p_config * const config)
 {
 	if (config && ndx < config->max_s) {
 		uint8_t len = strlen (chars_to_rm)+1;
@@ -147,7 +160,8 @@ __attribute__((flatten)) void p_config_rm_chars_from (char * const chars_to_rm, 
 	}
 }
 
-__attribute__((flatten)) void p_config_sub_chars_from (char * const chars_to_sub, const uint8_t ndx, struct p_config * const config)
+__attribute__((flatten)) 
+void p_config_sub_chars_from (char * const chars_to_sub, const uint8_t ndx, struct p_config * const config)
 {
 	if (config && ndx < config->max_s) {
 		uint8_t len = strlen (chars_to_sub)+1;
@@ -163,11 +177,15 @@ __attribute__((flatten)) void p_config_sub_chars_from (char * const chars_to_sub
 	}
 }
 
-__attribute__((nonnull, malloc, flatten, always_inline)) static inline uint8_t *malloc_lengths	(const struct p_config * const);
-__attribute__((nonnull, always_inline)) static inline void sub_total_from_zero_to_min_s		(struct p_config * const, const uint8_t * const);
-__attribute__((nonnull, always_inline)) static inline void sub_total_from_min_s_to_max_s	(struct p_config * const, const uint8_t * const);
+__attribute__((nonnull, malloc, flatten, always_inline)) 
+static inline uint8_t *malloc_lengths			(const struct p_config * const);
+__attribute__((nonnull, always_inline)) 
+static inline void sub_total_from_zero_to_min_s		(struct p_config * const, const uint8_t * const);
+__attribute__((nonnull, always_inline)) 
+static inline void sub_total_from_min_s_to_max_s	(struct p_config * const, const uint8_t * const);
 
-__attribute__((flatten)) static inline void p_config_set_total (struct p_config * const config) /*Tenho que fazer com que essa função possa ser nonnull*/
+__attribute__((flatten)) 
+static inline void p_config_set_total (struct p_config * const config) /*Tenho que fazer com que essa função possa ser nonnull*/
 {
 	uint8_t *lengths;
 
@@ -184,16 +202,19 @@ __attribute__((flatten)) static inline void p_config_set_total (struct p_config 
 }
 
 #if __LP64__
-uint64_t
+uint64_t p_config_get_total (const struct p_config * const config)
 #else
-uint32_t
+uint32_t p_config_get_total (const struct p_config * const config)
 #endif
-	p_config_get_total (const struct p_config * const config)
-{ return config->total; }
+{ 
+	return config->total; 
+}
 
-__attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config * const, const uint8_t);
+__attribute__((nonnull, always_inline)) 
+static inline uint8_t pos_length (const struct p_config * const, const uint8_t);
 
-__attribute__((nonnull, malloc, flatten)) static inline uint8_t *malloc_lengths (const struct p_config * const config)
+__attribute__((nonnull, malloc, flatten)) 
+static inline uint8_t *malloc_lengths (const struct p_config * const config)
 {
 	uint8_t i;
 	uint8_t *lengths = malloc (config->max_s*sizeof (uint8_t));
@@ -210,10 +231,13 @@ __attribute__((nonnull, malloc, flatten)) static inline uint8_t *malloc_lengths 
 	return lengths;
 }
 
-__attribute__((always_inline, nonnull)) static inline uint8_t noec	(const int8_t * const, const int8_t * const); /*noec = number of equal chars*/
-__attribute__((always_inline, nonnull)) static inline int8_t *cnt	(const int8_t * const, const int8_t * const); /*concatenates*/
+__attribute__((always_inline, nonnull)) 
+static inline uint8_t noec	(const int8_t * const, const int8_t * const); /*noec = number of equal chars*/
+__attribute__((always_inline, nonnull)) 
+static inline int8_t *cnt	(const int8_t * const, const int8_t * const); /*concatenates*/
 
-__attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const struct p_config * const config, const uint8_t ndx)
+__attribute__((nonnull, always_inline)) 
+static inline uint8_t pos_length (const struct p_config * const config, const uint8_t ndx)
 {
 	uint8_t len = 0;
 
@@ -253,7 +277,8 @@ __attribute__((nonnull, always_inline)) static inline uint8_t pos_length (const 
 	return len;
 }
 
-__attribute__((always_inline)) static inline uint8_t noec (const int8_t * const str_1, const int8_t * const str_2)
+__attribute__((always_inline)) 
+static inline uint8_t noec (const int8_t * const str_1, const int8_t * const str_2)
 {
 	uint8_t n_equals = 0;
 	uint8_t len_1 = strlen ((char *) str_1);
@@ -272,7 +297,8 @@ __attribute__((always_inline)) static inline uint8_t noec (const int8_t * const 
 	return n_equals;
 }
 
-__attribute__((always_inline)) static inline int8_t *cnt (const int8_t * const str_1, const int8_t * const str_2)
+__attribute__((always_inline)) 
+static inline int8_t *cnt (const int8_t * const str_1, const int8_t * const str_2)
 {
 	uint8_t len_cntn = strlen ((char*) str_1) + strlen ((char*) str_2) + 1;
 	int8_t *cntn = malloc (len_cntn*sizeof(int8_t));
@@ -288,7 +314,8 @@ __attribute__((always_inline)) static inline int8_t *cnt (const int8_t * const s
 	return cntn;
 }
 
-__attribute__((nonnull, always_inline)) static inline void sub_total_from_zero_to_min_s (struct p_config * const config, const uint8_t * const lengths)
+__attribute__((nonnull, always_inline)) 
+static inline void sub_total_from_zero_to_min_s (struct p_config * const config, const uint8_t * const lengths)
 {
 	uint8_t i;
 
@@ -302,7 +329,8 @@ __attribute__((nonnull, always_inline)) static inline void sub_total_from_zero_t
 	}
 }
 
-__attribute__((nonnull, always_inline)) static inline void sub_total_from_min_s_to_max_s (struct p_config * const config, const uint8_t * const lengths)
+__attribute__((nonnull, always_inline)) 
+static inline void sub_total_from_min_s_to_max_s (struct p_config * const config, const uint8_t * const lengths)
 {
 	uint8_t i;
 	#if __LP64__
@@ -320,7 +348,8 @@ __attribute__((nonnull, always_inline)) static inline void sub_total_from_min_s_
 	}
 }
 
-__attribute__((always_inline, nonnull)) static inline /*const*/ uint8_t **p_config_compile (const struct p_config * const config)
+__attribute__((always_inline, nonnull)) 
+static inline /*const*/ uint8_t **p_config_compile (const struct p_config * const config)
 {
 	uint8_t **compiled_password;
 	uint8_t *len;
@@ -352,20 +381,30 @@ static uint8_t *buff;
 static uint8_t buffs;
 static uint8_t buffl;
 
-__attribute__((always_inline)) static inline void valid_config				(const struct p_config * const);
-__attribute__((nonnull, hot)) static void check_bounds					(uint8_t **, const uint8_t ** const, const uint8_t * const, uint8_t);
-__attribute__((always_inline, nonnull, malloc)) static inline const uint8_t *lengths	(const struct p_config * const, uint8_t ** const);
-__attribute__((always_inline, nonnull, malloc)) static inline const uint8_t **boundS	(const struct p_config * const, uint8_t ** const, const uint8_t * const);
+__attribute__((always_inline)) 
+static inline void valid_config			(const struct p_config * const);
+__attribute__((nonnull, hot)) 
+static void check_bounds			(uint8_t **, const uint8_t ** const, const uint8_t * const, uint8_t);
+__attribute__((always_inline, nonnull, malloc)) 
+static inline const uint8_t *lengths		(const struct p_config * const, uint8_t ** const);
+__attribute__((always_inline, nonnull, malloc)) 
+static inline const uint8_t **boundS		(const struct p_config * const, uint8_t ** const, const uint8_t * const);
 #ifdef __LP64__
-__attribute__((always_inline, nonnull)) static inline uint64_t initial_total (const struct p_config * const, const uint8_t * const);
+__attribute__((always_inline, nonnull)) 
+static inline uint64_t initial_total 		(const struct p_config * const, const uint8_t * const);
 #else
-__attribute__((always_inline, nonnull)) static inline uint32_t initial_total (const struct p_config * const, const uint8_t * const);
+__attribute__((always_inline, nonnull)) 
+static inline uint32_t initial_total 		(const struct p_config * const, const uint8_t * const);
 #endif
-__attribute__((always_inline, flatten, nonnull, hot)) static inline void buff_password	(uint8_t ** const, const int8_t);
-__attribute__((always_inline, malloc)) static inline uint8_t *buffer 			(const uint8_t);
-__attribute__((always_inline, hot)) static inline void buffout				(const int8_t);
+__attribute__((always_inline, flatten, nonnull, hot)) 
+static inline void buff_password		(uint8_t ** const, const int8_t);
+__attribute__((always_inline, malloc)) 
+static inline uint8_t *buffer 			(const uint8_t);
+__attribute__((always_inline, hot)) 
+static inline void buffout			(const int8_t);
 
-__attribute__((hot)) void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
+__attribute__((hot)) 
+void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
 {
 	/*const*/ uint8_t **password;
 	const uint8_t **bounds;
@@ -421,7 +460,8 @@ __attribute__((hot)) void generate (struct p_config *config, int8_t fd, uint8_t 
 	free (password);
 }
 
-__attribute__((always_inline, flatten, nonnull, hot)) static inline void buff_password (uint8_t ** const password, const int8_t fd)
+__attribute__((always_inline, flatten, nonnull, hot)) 
+static inline void buff_password (uint8_t ** const password, const int8_t fd)
 {
 	uint8_t i;
 	for (i = 0; i < limit; i++, buffl++, buff++)
@@ -437,14 +477,16 @@ __attribute__((always_inline, flatten, nonnull, hot)) static inline void buff_pa
 	}
 }
 
-__attribute__((always_inline, hot)) static inline void buffout (const int8_t fd)
+__attribute__((always_inline, hot)) 
+static inline void buffout (const int8_t fd)
 {
 	buff -= buffl;
 	write (fd, buff, buffl); /*maybe: buffl -= write (fd, buff, buffl)*/
 	buffl = 0;
 }
 
-__attribute ((always_inline, malloc, alloc_size(1))) static inline uint8_t *buffer (const uint8_t buff_s)
+__attribute ((always_inline, malloc, alloc_size(1))) 
+static inline uint8_t *buffer (const uint8_t buff_s)
 {
 	uint8_t *aux;
 
@@ -459,7 +501,8 @@ __attribute ((always_inline, malloc, alloc_size(1))) static inline uint8_t *buff
 	return aux;
 }
 
-__attribute__((nonnull, hot)) static void check_bounds (uint8_t **compiled_password, const uint8_t ** const bounds, const uint8_t * const len, uint8_t ndx)
+__attribute__((nonnull, hot)) 
+static void check_bounds (uint8_t **compiled_password, const uint8_t ** const bounds, const uint8_t * const len, uint8_t ndx)
 {
 	if (compiled_password[ndx] == bounds[ndx]) {
 		compiled_password[ndx] -= len[ndx];
@@ -468,7 +511,8 @@ __attribute__((nonnull, hot)) static void check_bounds (uint8_t **compiled_passw
 	}
 }
 
-__attribute__((always_inline, nonnull, malloc)) static inline const uint8_t *lengths (const struct p_config *config, uint8_t ** const password) /*const*/
+__attribute__((always_inline, nonnull, malloc)) 
+static inline const uint8_t *lengths (const struct p_config *config, uint8_t ** const password) /*const*/
 {
 	uint8_t i, *lengths;
 	
@@ -487,9 +531,11 @@ __attribute__((always_inline, nonnull, malloc)) static inline const uint8_t *len
 }
 
 #ifdef __LP64__
-__attribute__((always_inline, nonnull)) static inline uint64_t initial_total (const struct p_config * const config, const uint8_t * const len)
+__attribute__((always_inline, nonnull)) 
+static inline uint64_t initial_total (const struct p_config * const config, const uint8_t * const len)
 #else
-__attribute__((always_inline, nonnull)) static inline uint32_t initial_total (const struct p_config * const config, const uint8_t * const len)
+__attribute__((always_inline, nonnull)) 
+static inline uint32_t initial_total (const struct p_config * const config, const uint8_t * const len)
 #endif
 {
 	uint8_t i;
@@ -510,7 +556,8 @@ __attribute__((always_inline, nonnull)) static inline uint32_t initial_total (co
 	return total;
 }
 
-__attribute__((always_inline, nonnull, malloc)) static inline const uint8_t **boundS (const struct p_config * const config, uint8_t ** const password, const uint8_t * const len)
+__attribute__((always_inline, nonnull, malloc)) 
+static inline const uint8_t **boundS (const struct p_config * const config, uint8_t ** const password, const uint8_t * const len)
 {
 	uint8_t i;
 	const uint8_t **bounds;
@@ -531,18 +578,23 @@ __attribute__((always_inline, nonnull, malloc)) static inline const uint8_t **bo
 	return bounds;
 }
 
-__attribute__((always_inline)) static inline void valid_config (const struct p_config * const config)
+__attribute__((always_inline)) 
+static inline void valid_config (const struct p_config * const config)
 {
 	if (!config) {
 		plist_err (PLIST_ERR_NULL);
 	}
 }
 
-__attribute__((nonnull, always_inline)) static inline void free_p_config_add_set	(struct p_config * const);
-__attribute__((nonnull, always_inline)) static inline void free_p_config_rm_set		(struct p_config * const);
-__attribute__((nonnull, always_inline)) static inline void free_p_config_sub_set	(struct p_config * const);
+__attribute__((nonnull, always_inline)) 
+static inline void free_p_config_add_set	(struct p_config * const);
+__attribute__((nonnull, always_inline)) 
+static inline void free_p_config_rm_set		(struct p_config * const);
+__attribute__((nonnull, always_inline)) 
+static inline void free_p_config_sub_set	(struct p_config * const);
 
-__attribute__((flatten)) void free_p_config (struct p_config * const config)
+__attribute__((flatten)) 
+void free_p_config (struct p_config * const config)
 {
 	free_p_config_add_set (config);
 	free_p_config_rm_set (config);
@@ -551,7 +603,8 @@ __attribute__((flatten)) void free_p_config (struct p_config * const config)
 	free (config);
 }
 
-__attribute__((nonnull, always_inline)) static inline void free_p_config_add_set (struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void free_p_config_add_set (struct p_config *const config)
 {
 	uint8_t i;
 	for (i = 0; i < config->max_s; i++) {
@@ -559,7 +612,8 @@ __attribute__((nonnull, always_inline)) static inline void free_p_config_add_set
 	}
 	free (config->charsets.add_set);
 }
-__attribute__((nonnull, always_inline)) static inline void free_p_config_rm_set (struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void free_p_config_rm_set (struct p_config *const config)
 {
 	uint8_t i;
 	for (i = 0; i < config->max_s; i++) {
@@ -567,7 +621,8 @@ __attribute__((nonnull, always_inline)) static inline void free_p_config_rm_set 
 	}
 	free (config->charsets.rm_set);
 }
-__attribute__((nonnull, always_inline)) static inline void free_p_config_sub_set (struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void free_p_config_sub_set (struct p_config *const config)
 {
 	uint8_t i;
 	for (i = 0; i < config->max_s; i++) {
@@ -576,11 +631,16 @@ __attribute__((nonnull, always_inline)) static inline void free_p_config_sub_set
 	free (config->charsets.sub_set);
 }
 
-__attribute__((nonnull, always_inline)) static inline void print_base_set	(const struct p_config *const);
-__attribute__((nonnull, always_inline)) static inline void print_add_set	(const struct p_config *const);
-__attribute__((nonnull, always_inline)) static inline void print_rm_set		(const struct p_config *const);
-__attribute__((nonnull, always_inline)) static inline void print_sub_set	(const struct p_config *const);
-__attribute__((nonnull, always_inline)) static inline void print_total		(const struct p_config *const);
+__attribute__((nonnull, always_inline)) 
+static inline void print_base_set	(const struct p_config *const);
+__attribute__((nonnull, always_inline)) 
+static inline void print_add_set	(const struct p_config *const);
+__attribute__((nonnull, always_inline)) 
+static inline void print_rm_set		(const struct p_config *const);
+__attribute__((nonnull, always_inline)) 
+static inline void print_sub_set	(const struct p_config *const);
+__attribute__((nonnull, always_inline)) 
+static inline void print_total		(const struct p_config *const);
 
 __attribute__((flatten)) void print_p_config (const struct p_config *config)
 {
@@ -596,12 +656,14 @@ __attribute__((flatten)) void print_p_config (const struct p_config *config)
 	}
 }
 
-__attribute__((nonnull, always_inline)) static inline void print_base_set (const struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void print_base_set (const struct p_config *const config)
 {
 	printf ("\nBase set:\n\t%s\n", config->charsets.base_set);
 }
 
-__attribute__((nonnull, always_inline)) static inline void print_add_set (const struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void print_add_set (const struct p_config *const config)
 {
 	uint8_t i;
 
@@ -611,7 +673,8 @@ __attribute__((nonnull, always_inline)) static inline void print_add_set (const 
 		printf ("\tchar[%u]:%s\n", i, config->charsets.add_set[i]);
 }
 
-__attribute__((nonnull, always_inline)) static inline void print_rm_set (const struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void print_rm_set (const struct p_config *const config)
 {
 	uint8_t i;
 
@@ -621,7 +684,8 @@ __attribute__((nonnull, always_inline)) static inline void print_rm_set (const s
 		printf ("\tchar[%u]:%s\n", i, config->charsets.rm_set[i]);
 }
 
-__attribute__((nonnull, always_inline)) static inline void print_sub_set (const struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void print_sub_set (const struct p_config *const config)
 {
 	uint8_t i;
 
@@ -631,7 +695,8 @@ __attribute__((nonnull, always_inline)) static inline void print_sub_set (const 
 		printf ("\tchar[%u]:%s\n", i, config->charsets.sub_set[i]);
 }
 
-__attribute__((nonnull, always_inline)) static inline void print_total (const struct p_config *const config)
+__attribute__((nonnull, always_inline)) 
+static inline void print_total (const struct p_config *const config)
 {
 	printf ("\nTOTAL: %lu\n", config->total);
 }
