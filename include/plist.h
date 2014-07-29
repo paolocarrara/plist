@@ -10,8 +10,6 @@
 
 struct sets {
 	int8_t *base_set;
-	int8_t **add_set;
-	int8_t **rm_set;
 	int8_t **sub_set;
 };
 
