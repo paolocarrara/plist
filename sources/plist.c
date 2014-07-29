@@ -108,52 +108,22 @@ static inline void p_config_realloc_sets (struct p_config * const config, const 
 __attribute__((nonnull, always_inline)) 
 static inline void p_config_null_sets (struct p_config * const config, const uint8_t max)
 {
-	for (;config->max_s < max; config->max_s++) {
+	while (config->max_s < max) {
 		config->charsets.add_set[config->max_s] = NULL;
 		config->charsets.rm_set[config->max_s] = NULL;
 		config->charsets.sub_set[config->max_s] = NULL;
+		config->max_s++;
 	}
 }
 
 __attribute__((flatten)) 
 void p_config_base_set (char * const base_set, struct p_config * const config)
 {
-	if (config) {/*maybe free, checkt that*/
+	if (config) {
 		uint8_t len = strlen (base_set)+1;
 		config->charsets.base_set = realloc (config->charsets.base_set, len*sizeof (int8_t));
 		memcpy (config->charsets.base_set, base_set, len);
 		p_config_set_total (config);
-	}
-	else {
-		plist_err (PLIST_ERR_NULL);
-	}
-}
-
-__attribute__((flatten)) 
-void p_config_add_chars_in (char * const chars_to_add, const uint8_t ndx, struct p_config * const config)
-{
-	if (config && ndx < config->max_s) {
-		uint8_t len = strlen (chars_to_add)+1;
-		config->charsets.add_set[ndx] = realloc (config->charsets.add_set[ndx], len*sizeof (int8_t));
-		memcpy (config->charsets.add_set[ndx], chars_to_add, len);
-		p_config_set_total (config);
-	}
-	else {
-		plist_err (PLIST_ERR_NULL);
-	}
-}
-
-__attribute__((flatten)) 
-void p_config_rm_chars_from (char * const chars_to_rm, const uint8_t ndx, struct p_config * const config)
-{
-	if (config && ndx < config->max_s) {
-		uint8_t len = strlen (chars_to_rm)+1;
-		config->charsets.rm_set[ndx] = realloc (config->charsets.rm_set[ndx], len*sizeof (int8_t));
-		memcpy (config->charsets.rm_set[ndx], chars_to_rm, len);
-		p_config_set_total (config);
-	}
-	else if (ndx >= config->max_s){
-		plist_err (PLIST_ERR_NDX_OUT);
 	}
 	else {
 		plist_err (PLIST_ERR_NULL);
@@ -170,6 +140,7 @@ void p_config_sub_chars_from (char * const chars_to_sub, const uint8_t ndx, stru
 		p_config_set_total (config);
 	}
 	else if (ndx >= config->max_s){
+		printf ("%d\n", config->max_s);
 		plist_err (PLIST_ERR_NDX_OUT);
 	}
 	else {
@@ -348,39 +319,13 @@ static inline void sub_total_from_min_s_to_max_s (struct p_config * const config
 	}
 }
 
-__attribute__((always_inline, nonnull)) 
-static inline /*const*/ uint8_t **p_config_compile (const struct p_config * const config)
-{
-	uint8_t **compiled_password;
-	uint8_t *len;
-	uint8_t i;
-
-	compiled_password = malloc ((config->max_s+1)*sizeof(uint8_t *));
-	len = malloc (config->max_s*sizeof(uint8_t));
-
-	if (compiled_password && len) {
-	
-		for (i = 0; i < config->max_s; i++) {
-			len[i] = strlen((char *)config->charsets.base_set);
-			compiled_password[i] = malloc ((len[i]+1)*sizeof(uint8_t));
-			memcpy (compiled_password[i], config->charsets.base_set, len[i]+1);
-		}
-		compiled_password[i] = NULL;
-
-		free (len);
-	}
-	else {
-		plist_err (PLIST_ERR_NULL_MALLOC);
-	}
-
-	return /*(const uint8_t **)*/compiled_password;
-}
-
 static uint8_t limit;
 static uint8_t *buff;
 static uint8_t buffs;
 static uint8_t buffl;
 
+__attribute__((always_inline, nonnull)) 
+static inline uint8_t **p_config_compile 	(const struct p_config * const); /*const*/
 __attribute__((always_inline)) 
 static inline void valid_config			(const struct p_config * const);
 __attribute__((nonnull, hot)) 
@@ -458,6 +403,38 @@ void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
 	free (buff);
 	free (bounds);
 	free (password);
+}
+
+__attribute__((always_inline, nonnull)) 
+static inline uint8_t **p_config_compile (const struct p_config * const config) /*const*/
+{
+	uint8_t ** compiled_password;
+	uint8_t i;
+
+	compiled_password = malloc ((config->max_s+1)*sizeof (uint8_t *));
+
+	if (compiled_password) {
+
+		for (i = 0; i < config->max_s; i++) {
+
+			uint8_t len = pos_length (config, i);
+			compiled_password[i] = malloc ((len+1)*sizeof (uint8_t));
+
+			if (config->charsets.sub_set[i]) {
+				memcpy (compiled_password[i], config->charsets.sub_set[i], strlen ((char *) config->charsets.sub_set[i])+1);
+			}
+			else {
+				memcpy (compiled_password[i], config->charsets.base_set, strlen ((char *) config->charsets.base_set)+1);
+			}
+		}
+
+		compiled_password[i] = NULL;
+	}
+	else {
+		plist_err (PLIST_ERR_NULL_MALLOC);
+	}
+
+	return /*(const uint8_t **)*/compiled_password;
 }
 
 __attribute__((always_inline, flatten, nonnull, hot)) 
