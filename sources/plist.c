@@ -422,6 +422,8 @@ void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
 	free ((void *) len);
 	free (buff);
 	free (bounds);
+	for (i = 0; i < config->max_s; i++)
+		free (password[i]);
 	free (password);
 }
 
@@ -462,7 +464,7 @@ static inline void buff_password (uint8_t ** const password, const int8_t fd)
 {
 	uint8_t i;
 	for (i = 0; i < limit; i++, buffl++, buff++)
-		memcpy (buff, password[i], 1); 
+		memcpy (buff, password[i], 1);
 
 	/*Ugly. maybe don't do it, or make it optional..*/
 	memcpy (buff, "\n", 1);
