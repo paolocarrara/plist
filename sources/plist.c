@@ -140,7 +140,27 @@ void p_config_sub_chars_from (char * const chars_to_sub, const uint8_t ndx, stru
 		p_config_set_total (config);
 	}
 	else if (ndx >= config->max_s){
-		printf ("%d\n", config->max_s);
+		plist_err (PLIST_ERR_NDX_OUT);
+	}
+	else {
+		plist_err (PLIST_ERR_NULL);
+	}
+}
+
+__attribute__((flatten))
+void p_config_rm_sub_set (struct p_config * const config, const uint8_t ndx)
+{
+	if (config && ndx < config->max_s) {
+		if (config->charsets.sub_set[ndx]) {
+			free (config->charsets.sub_set[ndx]);
+			config->charsets.sub_set[ndx] = NULL;
+			p_config_set_total (config);
+		}
+		else {
+			plist_err (PLIST_ERR_NULL);
+		}
+	}
+	else if (ndx >= config->max_s){
 		plist_err (PLIST_ERR_NDX_OUT);
 	}
 	else {
