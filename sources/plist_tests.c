@@ -2,7 +2,7 @@
 
 uint8_t test__p_config_set_default (const struct p_config *new)
 {
-	if (new->min_s == 0 && new->max_s == 0 && new->total == 0 && new->charsets.base_set == NULL && new->charsets.add_set == NULL && new->charsets.rm_set == NULL && new->charsets.sub_set == NULL) {
+	if (new->min_s == 0 && new->max_s == 0 && new->total == 0 && new->charsets.base_set == NULL && new->charsets.sub_set == NULL) {
 		printf ("TEST <p_config_set_default> -- OK\n");
 		return 1;
 	}

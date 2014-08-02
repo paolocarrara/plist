@@ -13,8 +13,6 @@ static inline void p_config_set_default (struct p_config * const new)
 		new->max_s = 0;
 		new->total = 0;
 		new->charsets.base_set = NULL;
-		new->charsets.add_set = NULL;
-		new->charsets.rm_set = NULL;
 		new->charsets.sub_set = NULL;
 	}
 	else {
@@ -100,8 +98,6 @@ void p_config_set_max_s (const uint8_t max, struct p_config *config)
 __attribute__((nonnull, always_inline)) 
 static inline void p_config_realloc_sets (struct p_config * const config, const uint8_t max)
 {
-	config->charsets.add_set = realloc ( config->charsets.add_set, max*sizeof (int8_t *) );
-	config->charsets.rm_set = realloc ( config->charsets.rm_set, max*sizeof (int8_t *) );
 	config->charsets.sub_set = realloc ( config->charsets.sub_set, max*sizeof (int8_t *) );
 }
 
@@ -109,8 +105,6 @@ __attribute__((nonnull, always_inline))
 static inline void p_config_null_sets (struct p_config * const config, const uint8_t max)
 {
 	while (config->max_s < max) {
-		config->charsets.add_set[config->max_s] = NULL;
-		config->charsets.rm_set[config->max_s] = NULL;
 		config->charsets.sub_set[config->max_s] = NULL;
 		config->max_s++;
 	}
@@ -234,35 +228,9 @@ static inline uint8_t pos_length (const struct p_config * const config, const ui
 
 	if (config->charsets.sub_set[ndx]) {
 		len = strlen ((char *) config->charsets.sub_set[ndx]);
-
-		if (config->charsets.add_set[ndx] && config->charsets.rm_set[ndx]) {
-			int8_t *cntn = cnt (config->charsets.sub_set[ndx], config->charsets.add_set[ndx]);
-			len -= noec (cntn, config->charsets.rm_set[ndx]);
-			len += strlen ((char *) config->charsets.add_set[ndx]);
-			free (cntn);
-		}
-		else if (config->charsets.rm_set[ndx]) {
-			len -= noec (config->charsets.sub_set[ndx], config->charsets.rm_set[ndx]);
-		}
-		else if (config->charsets.add_set[ndx]) {
-			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.sub_set[ndx]) );
-		}
 	}
 	else {
 		len = strlen ((char *) config->charsets.base_set);
-
-		if (config->charsets.add_set[ndx] && config->charsets.rm_set[ndx]) {
-			int8_t *cntn = cnt (config->charsets.base_set, config->charsets.add_set[ndx]);
-			len -= noec (cntn, config->charsets.rm_set[ndx]);
-			len += strlen ((char *) config->charsets.add_set[ndx]);
-			free (cntn);
-		}
-		else if (config->charsets.rm_set[ndx]) {
-			len -= noec (config->charsets.base_set, config->charsets.rm_set[ndx]);
-		}
-		else if (config->charsets.add_set[ndx]) {
-			len += ( strlen ((char *) config->charsets.add_set[ndx]) - noec (config->charsets.add_set[ndx], config->charsets.base_set) );
-		}
 	}
 
 	return len;
@@ -586,40 +554,16 @@ static inline void valid_config (const struct p_config * const config)
 }
 
 __attribute__((nonnull, always_inline)) 
-static inline void free_p_config_add_set	(struct p_config * const);
-__attribute__((nonnull, always_inline)) 
-static inline void free_p_config_rm_set		(struct p_config * const);
-__attribute__((nonnull, always_inline)) 
 static inline void free_p_config_sub_set	(struct p_config * const);
 
 __attribute__((flatten)) 
 void free_p_config (struct p_config * const config)
 {
-	free_p_config_add_set (config);
-	free_p_config_rm_set (config);
 	free_p_config_sub_set (config);
 	free (config->charsets.base_set);
 	free (config);
 }
 
-__attribute__((nonnull, always_inline)) 
-static inline void free_p_config_add_set (struct p_config *const config)
-{
-	uint8_t i;
-	for (i = 0; i < config->max_s; i++) {
-		free (config->charsets.add_set[i]);
-	}
-	free (config->charsets.add_set);
-}
-__attribute__((nonnull, always_inline)) 
-static inline void free_p_config_rm_set (struct p_config *const config)
-{
-	uint8_t i;
-	for (i = 0; i < config->max_s; i++) {
-		free (config->charsets.rm_set[i]);
-	}
-	free (config->charsets.rm_set);
-}
 __attribute__((nonnull, always_inline)) 
 static inline void free_p_config_sub_set (struct p_config *const config)
 {
@@ -633,10 +577,6 @@ static inline void free_p_config_sub_set (struct p_config *const config)
 __attribute__((nonnull, always_inline)) 
 static inline void print_base_set	(const struct p_config *const);
 __attribute__((nonnull, always_inline)) 
-static inline void print_add_set	(const struct p_config *const);
-__attribute__((nonnull, always_inline)) 
-static inline void print_rm_set		(const struct p_config *const);
-__attribute__((nonnull, always_inline)) 
 static inline void print_sub_set	(const struct p_config *const);
 __attribute__((nonnull, always_inline)) 
 static inline void print_total		(const struct p_config *const);
@@ -648,8 +588,6 @@ __attribute__((flatten)) void print_p_config (const struct p_config *config)
 		printf ("Maximum password size: %u\n", config->max_s);
 
 		print_base_set (config);
-		print_add_set (config);
-		print_rm_set (config);
 		print_sub_set (config);
 		print_total (config);
 	}
@@ -659,28 +597,6 @@ __attribute__((nonnull, always_inline))
 static inline void print_base_set (const struct p_config *const config)
 {
 	printf ("\nBase set:\n\t%s\n", config->charsets.base_set);
-}
-
-__attribute__((nonnull, always_inline)) 
-static inline void print_add_set (const struct p_config *const config)
-{
-	uint8_t i;
-
-	printf ("\nAdds to the base set\n");
-
-	for (i = 0; i < config->max_s; i++)
-		printf ("\tchar[%u]:%s\n", i, config->charsets.add_set[i]);
-}
-
-__attribute__((nonnull, always_inline)) 
-static inline void print_rm_set (const struct p_config *const config)
-{
-	uint8_t i;
-
-	printf ("\nRemoves from the base set\n");
-
-	for (i = 0; i < config->max_s; i++)
-		printf ("\tchar[%u]:%s\n", i, config->charsets.rm_set[i]);
 }
 
 __attribute__((nonnull, always_inline)) 
