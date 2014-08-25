@@ -307,7 +307,8 @@ static inline void sub_total_from_min_s_to_max_s (struct p_config * const config
 	}
 }
 
-static uint8_t limit;
+/* Rever essas variáveis!!! */
+static uint8_t limit; 
 static uint8_t *buff;
 static uint8_t buffs;
 static uint8_t buffl;
@@ -337,13 +338,12 @@ __attribute__((always_inline, hot))
 static inline void buffout			(const int8_t);
 
 __attribute__((hot)) 
-void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
+void generate (struct p_config *config, int8_t fd, uint16_t buff_s)
 {
 	/*const*/ uint8_t **password;
 	const uint8_t **bounds;
-	const uint8_t *len;
+	const uint8_t *lens;
 	uint8_t min, max;
-	clock_t t;
 	#if __LP64__
 	uint64_t total, i;
 	#else
@@ -359,35 +359,32 @@ void generate (struct p_config *config, int8_t fd, uint8_t buff_s)
 	password = p_config_compile (config);
 
 	/*Get the length of every position set in the password*/
-	len = lengths (config, password);
+	lens = lengths (config, password);
 
 	/*Get the bounds of every position set in the password*/
-	bounds = boundS (config, password, len);
+	bounds = boundS (config, password, lens);
 
 	/*Get the initial total of passwords to generate*/
-	total = initial_total (config, len);
+	total = initial_total (config, lens);
 
-	t = clock (); /*<-- Not needed*/
+	/*Paralelizar*/
 	for (limit = min = config->min_s, max = config->max_s; min <= max; min++, limit++) {
 
-		total *= len[min-1];
+		total *= lens[min-1];
 		i = total;
 
 		while (i-->0) {
 			buff_password (password, fd);
-			check_bounds (password, bounds, len, 0);
+			check_bounds (password, bounds, lens, 0);
 			password[0]++;
 		}
 		if (min < max)
 			password[min]--;
 	}
 	buffout (fd); /*Cleans the buffer*/
-	t = clock() - t; /*<-- Not needed*/
-
-	printf ("TIME ELAPSED: %f\n", (float)t/CLOCKS_PER_SEC); /*<-- Not needed*/
 
 	/*Frees*/
-	free ((void *) len);
+	free ((void *) lens);
 	free (buff);
 	free (bounds);
 	for (i = 0; i < config->max_s; i++)

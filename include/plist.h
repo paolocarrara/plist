@@ -7,6 +7,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <omp.h>
 
 struct sets {
 	int8_t *base_set;
@@ -48,7 +49,7 @@ void p_config_sub_chars_from	(char *, uint8_t, struct p_config *);
 __attribute__((flatten)) 
 void p_config_rm_sub_set	(struct p_config *, uint8_t);
 __attribute__((hot)) 
-void generate 			(struct p_config *, int8_t, uint8_t);
+void generate 			(struct p_config *, int8_t, uint16_t);
 
 __attribute__((flatten)) 
 void free_p_config 		(struct p_config *);

@@ -1,4 +1,4 @@
-CC = gcc
+CC = gcc -fopenmp
 DBG = -g -ggdb
 WFLG = -Wall -pedantic -Wunused -Wformat -Wextra -Wunreachable-code -Wformat-security -Winline -Wreturn-type -Wuninitialized -Wimplicit-function-declaration -Wnonnull
 INCL_H = include/
