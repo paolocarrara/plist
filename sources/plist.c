@@ -1,6 +1,5 @@
 #include "../include/plist.h"
 #include "../include/plist_err.h"
-#include <time.h>
 #ifndef __GNUC__
 #define __inline__ inline
 #endif
@@ -8,16 +7,11 @@
 __attribute__((always_inline, nonnull)) 
 static inline void p_config_set_default (struct p_config * const new) 
 {
-	if (new) {
-		new->min_s = 0;
-		new->max_s = 0;
-		new->total = 0;
-		new->charsets.base_set = NULL;
-		new->charsets.sub_set = NULL;
-	}
-	else {
-		plist_err (PLIST_ERR_NULL);
-	}
+	new->min_s = 0;
+	new->max_s = 0;
+	new->total = 0;
+	new->charsets.base_set = NULL;
+	new->charsets.sub_set = NULL;
 }
 
 __attribute__((malloc, warn_unused_result)) 
@@ -32,6 +26,32 @@ struct p_config *new_p_config (void)
 		plist_err (PLIST_ERR_NULL_MALLOC);
 	}
 
+	return new;
+}
+
+__attribute__((always_inline, nonnull)) 
+static inline void p_config_extra_set_default (struct p_config_extra * const new)
+{
+	new->num_threads = 1;
+	new->buffer_size = 255;
+	new->mode = 0;
+	new->out = fileno (stdout);
+	new->remaining = NULL;
+	new->save = 0;
+}
+
+__attribute__((malloc, warn_unused_result)) 
+struct p_config_extra *new_p_config_extra (void)
+{
+	struct p_config_extra *new = malloc (sizeof(struct p_config_extra));
+
+	if (new) {
+		p_config_extra_set_default (new);
+	}
+	else {
+		plist_err (PLIST_ERR_NULL_MALLOC);
+	}
+	
 	return new;
 }
 
@@ -307,95 +327,132 @@ static inline void sub_total_from_min_s_to_max_s (struct p_config * const config
 	}
 }
 
-/* Rever essas variáveis!!! */
-static uint8_t limit; 
-static uint8_t *buff;
-static uint8_t buffs;
-static uint8_t buffl;
+struct State {
+	uint8_t num_threads;
+	struct p_config *config;
+};
+
+struct Buffer {
+	uint8_t *elements;	/*elements in the buffer*/
+	uint8_t length;		/*buffer length*/
+	uint8_t total;		/*total of elements in the buffer*/
+};
 
 __attribute__((always_inline, nonnull)) 
-static inline uint8_t **p_config_compile 	(const struct p_config * const); /*const*/
+static inline uint8_t  **p_config_compile 	(const struct p_config * const);
 __attribute__((always_inline)) 
 static inline void valid_config			(const struct p_config * const);
 __attribute__((nonnull, hot)) 
 static void check_bounds			(uint8_t **, const uint8_t ** const, const uint8_t * const, uint8_t);
 __attribute__((always_inline, nonnull, malloc)) 
-static inline const uint8_t *lengths		(const struct p_config * const, uint8_t ** const);
+static inline const uint8_t *lengths		(const struct p_config * const);
 __attribute__((always_inline, nonnull, malloc)) 
 static inline const uint8_t **boundS		(const struct p_config * const, uint8_t ** const, const uint8_t * const);
 #ifdef __LP64__
 __attribute__((always_inline, nonnull)) 
 static inline uint64_t initial_total 		(const struct p_config * const, const uint8_t * const);
+__attribute__((always_inline)) 
+static inline uint64_t get_thread_total 	(const uint64_t total);
 #else
 __attribute__((always_inline, nonnull)) 
 static inline uint32_t initial_total 		(const struct p_config * const, const uint8_t * const);
+__attribute__((always_inline)) 
+static inline uint32_t get_thread_total 	(const uint32_t total);
 #endif
 __attribute__((always_inline, flatten, nonnull, hot)) 
-static inline void buff_password		(uint8_t ** const, const int8_t);
+static inline void password_to_buffer		(uint8_t ** const, const int8_t, struct Buffer *const, const uint8_t);
 __attribute__((always_inline, malloc)) 
-static inline uint8_t *buffer 			(const uint8_t);
+static inline struct Buffer *get_buffer 	(const uint8_t);
+__attribute__((nonnull))
+static void positionate_password 		(uint8_t ***const, const uint8_t, const uint8_t *const, uint64_t);
 __attribute__((always_inline, hot)) 
-static inline void buffout			(const int8_t);
+static inline void buffer_to_out		(const int8_t, struct Buffer *const);
 
 __attribute__((hot)) 
-void generate (struct p_config *config, int8_t fd, uint16_t buff_s)
+void generate (struct p_config *config, int8_t fd, uint16_t buff_s, uint16_t num_threads)
 {
-	/*const*/ uint8_t **password;
+	uint8_t **password;
+	struct Buffer *buffer;
 	const uint8_t **bounds;
 	const uint8_t *lens;
-	uint8_t min, max;
 	#if __LP64__
-	uint64_t total, i;
+	uint64_t total;
 	#else
-	uint32_t total, i;
+	uint32_t total;
 	#endif
+	uint8_t limit;
 
+	/*Verify if 'config' is a valid password configuration*/
 	valid_config (config);
 
-	/*Set up the buffer*/
-	buff = buffer (buff_s);
-
-	/*Set up the password*/
-	password = p_config_compile (config);
+	/*Set the total of threads*/
+	if (num_threads == 0)
+		num_threads = omp_get_num_procs ();
 
 	/*Get the length of every position set in the password*/
-	lens = lengths (config, password);
-
-	/*Get the bounds of every position set in the password*/
-	bounds = boundS (config, password, lens);
+	lens = lengths (config);
 
 	/*Get the initial total of passwords to generate*/
 	total = initial_total (config, lens);
 
-	/*Paralelizar*/
-	for (limit = min = config->min_s, max = config->max_s; min <= max; min++, limit++) {
+	/*Paralized password creation loop*/
+	for (limit = config->min_s; limit <= config->max_s; limit++) {
 
-		total *= lens[min-1];
-		i = total;
+		total *= lens[limit-1];
+		#pragma omp parallel num_threads (num_threads) private (password, buffer, bounds)
+		{
+			#if __LP64__
+			uint64_t thread_total;
+			#else
+			uint32_t thread_total;
+			#endif
 
-		while (i-->0) {
-			buff_password (password, fd);
-			check_bounds (password, bounds, lens, 0);
-			password[0]++;
+			/*Get the total of passwords to be generate for each thread*/
+			thread_total = get_thread_total (total);
+
+			/*Set up the password*/
+			password = p_config_compile (config);
+
+			/*Set up the buffer*/
+			buffer = get_buffer (buff_s);
+
+			/*Get the bounds of every position set in the password*/
+			bounds = boundS (config, password, lens);
+		
+			/*Positionate the initial password for each thread*/
+			positionate_password (&password, limit, lens, thread_total);
+		
+			/*Add the reamaining of the total passwords to the last thread*/ /*looks like its smelling here, make it better!*/
+			if (omp_get_thread_num () == omp_get_num_threads () - 1) {
+				thread_total += total%omp_get_num_threads ();
+			}
+
+			while (thread_total-->0) {
+				password_to_buffer (password, fd, buffer, limit);
+				check_bounds (password, bounds, lens, 0);
+				password[0]++;
+			}
+
+			/*Cleans the buffer*/
+			buffer_to_out (fd, buffer);
+
+			/*Free*/
+			free (buffer->elements);
+			free (buffer);
+			free (bounds);
+			
+			free (password);
 		}
-		if (min < max)
-			password[min]--;
 	}
-	buffout (fd); /*Cleans the buffer*/
 
 	/*Frees*/
 	free ((void *) lens);
-	free (buff);
-	free (bounds);
-	for (i = 0; i < config->max_s; i++)
-		free (password[i]);
-	free (password);
 }
 
 __attribute__((always_inline, nonnull)) 
-static inline uint8_t **p_config_compile (const struct p_config * const config) /*const*/
+static inline uint8_t **p_config_compile (const struct p_config * const config)
 {
-	uint8_t ** compiled_password;
+	uint8_t **compiled_password;
 	uint8_t i;
 
 	compiled_password = malloc ((config->max_s+1)*sizeof (uint8_t *));
@@ -403,15 +460,11 @@ static inline uint8_t **p_config_compile (const struct p_config * const config) 
 	if (compiled_password) {
 
 		for (i = 0; i < config->max_s; i++) {
-
-			uint8_t len = pos_length (config, i);
-			compiled_password[i] = malloc ((len+1)*sizeof (uint8_t));
-
 			if (config->charsets.sub_set[i]) {
-				memcpy (compiled_password[i], config->charsets.sub_set[i], strlen ((char *) config->charsets.sub_set[i])+1);
+				compiled_password[i] = (uint8_t *)config->charsets.sub_set[i];
 			}
 			else {
-				memcpy (compiled_password[i], config->charsets.base_set, strlen ((char *) config->charsets.base_set)+1);
+				compiled_password[i] = (uint8_t *)config->charsets.base_set;
 			}
 		}
 
@@ -421,62 +474,82 @@ static inline uint8_t **p_config_compile (const struct p_config * const config) 
 		plist_err (PLIST_ERR_NULL_MALLOC);
 	}
 
-	return /*(const uint8_t **)*/compiled_password;
+	return compiled_password;
 }
 
 __attribute__((always_inline, flatten, nonnull, hot)) 
-static inline void buff_password (uint8_t ** const password, const int8_t fd)
+static inline void password_to_buffer (uint8_t **const password, const int8_t fd, struct Buffer *const buffer, const uint8_t limit)
 {
-	uint8_t i;
-	for (i = 0; i < limit; i++, buffl++, buff++)
-		memcpy (buff, password[i], 1);
+	uint8_t k;
+	for (k = 0; k < limit; k++) {
+		memcpy (buffer->elements++, password[k], 1);
+	}
 
 	/*Ugly. maybe don't do it, or make it optional..*/
-	memcpy (buff, "\n", 1);
-	buffl++;
-	buff++;
+	memcpy (buffer->elements, "\n", 1);
+	buffer->elements++;
 
-	if (buffl >= buffs-limit) {
-		buffout (fd);
+	buffer->total += limit+1;
+
+	if (buffer->total >= buffer->length - limit) {
+		buffer_to_out (fd, buffer);
 	}
 }
 
 __attribute__((always_inline, hot)) 
-static inline void buffout (const int8_t fd)
+static inline void buffer_to_out (const int8_t fd, struct Buffer *const buffer)
 {
-	buff -= buffl;
-	write (fd, buff, buffl); /*maybe: buffl -= write (fd, buff, buffl)*/
-	buffl = 0;
+	buffer->elements -= buffer->total;
+	#pragma omp critical
+	write (fd, buffer->elements, buffer->total);
+	buffer->total = 0;
 }
 
 __attribute ((always_inline, malloc, alloc_size(1))) 
-static inline uint8_t *buffer (const uint8_t buff_s)
+static inline struct Buffer *get_buffer (const uint8_t buffer_length)
 {
-	uint8_t *aux;
+	struct Buffer *const buffer = malloc (sizeof (struct Buffer));
 
-	buffl = 0;
-	buffs = buff_s;
-	aux = malloc (buff_s*sizeof (uint8_t));
-
-	if (!aux) {
+	if (!buffer) {
 		plist_err (PLIST_ERR_NULL_MALLOC);
 	}
+	else {
+		buffer->length = buffer_length;
+		buffer->elements = malloc (buffer->length*sizeof(uint8_t));
+		if (!buffer->elements) {
+			plist_err (PLIST_ERR_NULL_MALLOC);
+		}
+		buffer->total = 0;
+	}
 
-	return aux;
+	return buffer;
 }
 
+__attribute__((nonnull))
+static void positionate_password (uint8_t ***const password, const uint8_t limit, const uint8_t *const lens, uint64_t thread_total)
+{
+			uint8_t i;
+			printf ("total:%li\n", thread_total);
+			thread_total *= omp_get_thread_num ();
+			printf ("total:%li\n", thread_total);
+
+			for (i = 0; i < limit; i++) {
+				(*password)[i] += thread_total%lens[i];
+				thread_total /= lens[i];
+			}
+}
 __attribute__((nonnull, hot)) 
-static void check_bounds (uint8_t **compiled_password, const uint8_t ** const bounds, const uint8_t * const len, uint8_t ndx)
+static void check_bounds (uint8_t **compiled_password, const uint8_t ** const bounds, const uint8_t * const lens, uint8_t ndx)
 {
 	if (compiled_password[ndx] == bounds[ndx]) {
-		compiled_password[ndx] -= len[ndx];
-		check_bounds (compiled_password, bounds, len, ++ndx);
+		compiled_password[ndx] -= lens[ndx];
+		check_bounds (compiled_password, bounds, lens, ++ndx);
 		compiled_password[ndx]++;
 	}
 }
 
 __attribute__((always_inline, nonnull, malloc)) 
-static inline const uint8_t *lengths (const struct p_config *config, uint8_t ** const password) /*const*/
+static inline const uint8_t *lengths (const struct p_config *const config)
 {
 	uint8_t i, *lengths;
 	
@@ -487,7 +560,12 @@ static inline const uint8_t *lengths (const struct p_config *config, uint8_t ** 
 	}
 	else {
 		for (i = 0; i < config->max_s; i++) {
-			lengths[i] = strlen ((char *) password[i]);
+			if (config->charsets.sub_set[i]) {
+				lengths[i] = strlen ((char *)config->charsets.sub_set[i]);
+			}
+			else {
+				lengths[i] = strlen ((char *)config->charsets.base_set);
+			}
 		}
 	}
 
@@ -526,7 +604,7 @@ static inline const uint8_t **boundS (const struct p_config * const config, uint
 	uint8_t i;
 	const uint8_t **bounds;
 	
-	bounds = malloc ( (config->max_s+1)*sizeof (uint8_t *));
+	bounds = malloc ( (config->max_s+1)*sizeof (uint8_t *) );
 
 	if (!bounds) {
 		plist_err (PLIST_ERR_NULL_MALLOC);
@@ -549,6 +627,24 @@ static inline void valid_config (const struct p_config * const config)
 		plist_err (PLIST_ERR_NULL);
 	}
 }
+
+#ifdef __LP64__
+__attribute__((always_inline)) 
+static inline uint64_t get_thread_total (const uint64_t total)
+#else 
+__attribute__((always_inline)) 
+static inline uint32_t get_thread_total (const uint32_t total)
+#endif
+{
+	#ifdef __LP64__
+	uint64_t thread_total = total/omp_get_num_threads ();
+	#else
+	uint32_t thread_total = total/omp_get_num_threads ();
+	#endif
+
+	return thread_total;
+}
+
 
 __attribute__((nonnull, always_inline)) 
 static inline void free_p_config_sub_set	(struct p_config * const);
@@ -612,3 +708,99 @@ static inline void print_total (const struct p_config *const config)
 {
 	printf ("\nTOTAL: %lu\n", config->total);
 }
+
+/*fazer um if para não salvar o estado caso não for especificado arquivo de saida*/
+void recover (struct p_config * const config, struct p_config_extra * const extra, const char * const recover_file_name)
+{
+	char *line;
+	size_t line_size;
+	uint8_t aux;
+	uint8_t ndx;
+
+	/* Open the recovery file */
+	FILE *fs = fopen (recover_file_name, "r+");
+
+	/* Get the output file name */
+	getline (&line, &line_size, fs);
+
+	/* Open the output file in append mode */
+	extra->out = open (line, O_WRONLY | O_APPEND, S_IRUSR | S_IWUSR);
+
+	/* Get the minimum password size */
+	getline (&line, &line_size, fs);
+	config->min_s = atoi (line);
+
+	/* Get the maximum password size */
+	getline (&line, &line_size, fs);
+	config->max_s = atoi (line);
+
+	/* Get the default password set */
+	getline (&line, &line_size, fs);
+	if (!strcmp (line, "NULL")) {
+		config->charsets.base_set = NULL;
+	}
+	else {
+		config->charsets.base_set = (int8_t *)line;
+	}
+	
+	/* Get the number of modifications to the base set */
+	getline (&line, &line_size, fs);
+	aux = atoi (line);	
+	
+	while (aux-->0) {
+		getline (&line, &line_size, fs);
+		ndx = atoi(strtok (line, " "));
+		config->charsets.sub_set[ndx] = (int8_t *)strtok (NULL, " ");
+	}
+
+	/* Get buffer size */
+	getline (&line, &line_size, fs);
+	extra->buffer_size = atoi (line);
+
+	/* Get the number of threads */
+	getline (&line, &line_size, fs);
+	extra->num_threads = atoi (line);
+
+	/* Malloc the remaining vector */
+	if (extra->num_threads == 0) {
+		#ifdef __LP64__
+		extra->remaining = malloc (sizeof(uint64_t));
+		#else
+		extra->remaining = malloc (sizeof(uint32_t));
+		#endif
+	}
+	else {
+		#ifdef __LP64__
+		extra->remaining = malloc (extra->num_threads*sizeof(uint64_t));
+		#else
+		extra->remaining = malloc (extra->num_threads*sizeof(uint32_t));
+		#endif
+	}
+
+	/* Get each thread remaining total */
+	aux = extra->num_threads;
+	while (aux-->0) {
+		getline (&line, &line_size, fs);
+		ndx = atoi (strtok (line, ""));
+		extra->remaining[ndx] = atoi (strtok (NULL, " "));
+	}
+
+	/* Get the limit variable */
+	getline (&line, &line_size, fs);
+
+	/*nome do arquivo de saida*/
+	/*min*/
+	/*max*/
+	/*default set*/
+	/*numero de modificacoes ao conjunto default*/
+	/*indice da modificacao : modificacao*/
+	/*tamanho do buffer*/
+	/*numero de threads*/
+	/*tamanho atual*/
+	/*thread id : quantidade de senhas calculadas para esse tamanho*/
+
+	/*Colocar o arquivo de recuração utilizado como arquivo de recuperação para o resto do processamento*/	
+
+	free (line);
+}
+
