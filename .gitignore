@@ -3,3 +3,4 @@ Makefile
 main.c
 plist
 out.txt
+time_results.txt
