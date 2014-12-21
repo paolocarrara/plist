@@ -9,11 +9,11 @@ Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada pr
 
 ```
 struct sets {
-	int8_t *base_se;
+	int8_t *base_set;
 	int8_t **sub_set;
 };
 ```
->Armazena os conjuntos de caracteres que irão ser usados para a criação das senhas
+>Armazena o conjunto de caracteres que serão usados para a criação das senhas
 
 ```
 struct p_config {
@@ -27,7 +27,7 @@ struct p_config {
 	struct sets charsets;
 };
 ```
->Armazena as informações básicas sobre o conjunto de senhas que irão ser geradas
+>Armazena as informações básicas sobre o conjunto de senhas que serão geradas
 
 ```
 struct p_config_restore {
@@ -40,7 +40,7 @@ struct p_config_restore {
 	#endif
 };
 ```
->Armazena informações adicionais para retornar de uma seção não finalizada
+>Armazena informações adicionais para retornar de uma seção finalizada prématuramente
 
 ```
 struct p_config_extra {
@@ -54,7 +54,7 @@ struct p_config_extra {
 	struct p_config_restore restore;
 };
 ```
->Armazena configurações adicionais para a geração do conjunto de senhas</p>
+>Armazena configurações adicionais para a geração do conjunto de senhas
 
 **Funções da biblioteca**
 
@@ -67,3 +67,26 @@ struct p_config *new_pconfig (void);
 struct p_config_extra *new_p_config_extra (void);
 ```
 >retorna uma estrutura do tipo p_config_extra
+
+```
+void p_config_set_min_s (const uint8_t, struct p_config *const);
+```
+>Define o tamanho mínimo para as senhas que serão geradas
+
+```
+void p_config_set_max_s (const uint8_t, struct p_config *const);
+```
+>Define o tamanho máximo para as senhas que serão geradas
+
+```
+void p_config_set_size (const uint8_t, struct p_config *const);
+```
+>Define o tamanho mínimo e máximo iguais para a geração das senhas
+
+```
+```
+```
+```
+```
+```
+```
