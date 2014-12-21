@@ -84,9 +84,80 @@ void p_config_set_size (const uint8_t, struct p_config *const);
 >Define o tamanho mínimo e máximo iguais para a geração das senhas
 
 ```
+void p_config_set_buffer_size (const uint16_t, struct p_config_extra *const);
 ```
+>Define o tamanho em bytes, que será usado para manter as senhas antes de serem guardadas em um arquivo ou mostradas na tela
+
 ```
+uint16_t p_config_get_buffer_size (const struct p_config_extra *const);
 ```
+>Pega o valor do buffer que será utilizado na geração das senhas
+
 ```
+void p_config_open_out_file (const char *const, struct p_config_extra *const);
 ```
+>Abre o arquivo no qual as senhas serão armazenadas
+
 ```
+void p_config_set_interval (const uint8_t, struct p_config_extra *const);
+```
+>Define o intervalo de tempo entre cada ponto de checagem
+
+```
+void p_config_set_save (const char *const, struct p_config_extra *const);
+```
+>Estabelece que a geração das senhas será acompanhada de pontos de checagem
+
+```
+void p_config_set_num_threads (const uint8_t, struct p_config_extra *const);
+```
+>Define o número de threads que serão utilizadas na geração das senhas
+
+```
+void p_config_restore (struct p_config *const, struct p_config_extra *const, const char *const);
+```
+>Recupera de uma seção inacabada
+
+```
+#if __LP64__
+uint64_t p_config_get_total             (const struct p_config *const);
+#else
+uint32_t p_config_get_total             (const struct p_config *const);
+#endif
+```
+>Pega o total de senhas que serão geradas
+
+```
+void p_config_base_set (char *const, struct p_config *const);
+```
+>Define o conjunto base de caractéres que serão utilizados na geração das senhas
+
+```
+void p_config_sub_chars_from (char *const, const uint8_t, struct p_config *const);
+```
+>Na posição escolhida substitui os caractéres base por um novo conjunto
+
+```
+void p_config_rm_sub_set (const uint8_t, struct p_config *const);
+```
+>Remove e volta para os caractéres base na posição escolhida
+
+```
+void generate (struct p_config *, struct p_config_extra *);
+```
+>Inicia a geração das senhas utilizando as configurações passadas
+
+```
+void free_p_config (struct p_config *const);
+```
+>Libera a estrutura p_config
+
+```
+void free_p_config_extra (struct p_config_extra *const);
+```
+>Libera a estrutura p_config_extra
+
+```
+void print_p_config (const struct p_config *);
+```
+>Mostra as configurações que serão utilizadas na geração das senhas
