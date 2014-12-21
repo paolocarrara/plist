@@ -8,6 +8,6 @@ Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada pr
 Funções da biblioteca
 
 
-struct p_config *new_pconfig (void);
+<code>struct p_config *new_pconfig (void);</code>
 
 	retorna uma estrutura do tipo p_config
