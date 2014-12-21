@@ -3,7 +3,7 @@ plist
 
 **Password List Generator**
 
-Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada principalmente para tentar quebrar senhas.
+Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada, especialmente, para tentar quebrar senhas.
 
 **Estruturas da biblioteca**
 
