@@ -91,7 +91,7 @@ void p_config_set_buffer_size (const uint16_t, struct p_config_extra *const);
 ```
 uint16_t p_config_get_buffer_size (const struct p_config_extra *const);
 ```
->Pega o valor do buffer que será utilizado na geração das senhas
+>Pega o tamanho do buffer que será utilizado na geração das senhas
 
 ```
 void p_config_open_out_file (const char *const, struct p_config_extra *const);
