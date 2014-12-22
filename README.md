@@ -8,7 +8,8 @@ Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada, e
 **Exemplos de uso**
 
 >Nesse exemplo as senhas serão mostradas na saída padrão, que, na maioria dos casos, é o terminal em que 
-o programa foi executado
+>o programa foi executado
+
 ```
 int main (int argc, char **argv) {
 
