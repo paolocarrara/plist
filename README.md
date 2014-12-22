@@ -5,9 +5,38 @@ plist
 
 Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada, especialmente, para a quebra de senhas.
 
+**Exemplos de uso**
+```
+int main (int argc, char **argv) {
+
+	struct p_config *config = new_p_config ();
+	struct p_config_extra extra = new_p_config_extra ();
+	
+	/*
+	 * Faz com que as senhas que serão geradas tenham 6 caracteres de comprimento
+	*/
+	p_config_set_size (6, config);
+	
+	/*
+	 * O conjunto base para a geração das senhas é o alfabeto.
+	 * Dessa forma as senhas irão variar de aaaaaa, baaaaa, ... , zzzzzz
+	*/
+	p_config_base_set ("abcdefghijklmnopqrstuvxywz", config);
+	
+	/*
+	 * Define o número de threads que será usado para a geração das senhas. Neste caso, irá usar quatro threads.
+	 */
+	p_config_set_num_threads (4, extra);
+
+	return 0;
+}
+```
+>Nesse exemplo as senhas serâo mostradas na saída padrão, que, na maioria dos casos, é o terminal em que 
+o programa foi rodado
+
 **Estruturas da biblioteca**
 
-```
+
 struct sets {
 	int8_t *base_set;
 	int8_t **sub_set;
