@@ -32,6 +32,11 @@ int main (int argc, char **argv) {
 	 */
 	p_config_set_num_threads (4, extra);
 
+	/*
+	 * Inicia a geração das senhas com as configurações passadas.
+	 */
+	generate (config, extra);
+
 	return 0;
 }
 ```
