@@ -6,6 +6,9 @@ plist
 Biblioteca para auxiliar na geração de listas de senhas. Pode ser utilizada, especialmente, para a quebra de senhas.
 
 **Exemplos de uso**
+
+>Nesse exemplo as senhas serão mostradas na saída padrão, que, na maioria dos casos, é o terminal em que 
+o programa foi executado
 ```
 int main (int argc, char **argv) {
 
@@ -31,8 +34,6 @@ int main (int argc, char **argv) {
 	return 0;
 }
 ```
->Nesse exemplo as senhas serâo mostradas na saída padrão, que, na maioria dos casos, é o terminal em que 
-o programa foi rodado
 
 **Estruturas da biblioteca**
 
